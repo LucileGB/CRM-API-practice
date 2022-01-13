@@ -22,8 +22,7 @@ class Client(models.Model):
     company_name = models.CharField("last name", max_length=25)
 
     date_created = models.DateTimeField("date joined", default=timezone.now)
-    # TODO: func - update updated
-    date_updated = models.DateTimeField("date joined", default=timezone.now)
+    date_updated = models.DateTimeField("date updated", default=timezone.now)
     sales_contact = models.ForeignKey(to=settings.AUTH_USER_MODEL,
                                         on_delete=models.SET_NULL,
                                         blank=True, null=True)
@@ -75,3 +74,6 @@ class Event(models.Model):
         )
     event_date = models.DateField()
     notes = models.TextField(max_length=1000)
+
+    def __str__(self):
+        return self.id
