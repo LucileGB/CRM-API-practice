@@ -12,12 +12,9 @@ from .serializers import ClientSerializer
 # Create your views here.
 @api_view(['GET', 'POST'])
 def clients(request):
-    """
-    List all code snippets, or create a new snippet.
-    """
     if request.method == 'GET':
-        client = Client.objects.all()
-        serializer = ClientSerializer(snippets, many=True)
+        clients = Client.objects.all()
+        serializer = ClientSerializer(clients, many=True)
         return Response(serializer.data)
 
     elif request.method == 'POST':
@@ -29,20 +26,17 @@ def clients(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def client_details(request, pk):
-    """
-    Retrieve, update or delete a code snippet.
-    """
     try:
         client = Client.objects.get(pk=pk)
     except Client.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = ClientSerializer(snippet)
+        serializer = ClientSerializer(client)
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = ClientSerializer(snippet, data=request.data)
+        serializer = ClientSerializer(client, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

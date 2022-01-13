@@ -11,14 +11,37 @@ class CustomUserManager(UserManager):
         return self.get(**{case_insensitive_username_field: username})
 
 
+    def create_user(self, email, password, is_staff, is_superuser, **extra_fields):
+        if not email:
+            raise ValueError('user must have email address')
+        email = self.normalize_email(email)
+        user = self.model(
+                email=email,
+                is_staff=is_staff,
+                is_superuser=is_superuser,
+                **extra_fields
+                   )
+        # We check if password has been given
+        if password:
+            user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, is_staff=True,
+                        is_superuser=True, **extra_fields):
+        user=self.create_user(email, password, is_staff, is_superuser, **extra_fields)
+        user.save(using=self._db)
+        return user
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     SALES = "sa"
     SUPPORT = "su"
+    STAFF = "st"
 
     USER_TYPE = (
-        (SALES, 'Sales'), (SUPPORT, 'Support')
+        (SALES, 'Sales'), (SUPPORT, 'Support'), (STAFF, 'Staff')
         )
 
     email = CIEmailField(
@@ -33,20 +56,26 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     first_name = models.CharField("first name", max_length=25)
     last_name = models.CharField("last name", max_length=25)
-
     # TODO: func - check entered phone number
-    phone_number = models.CharField("phone nomber", max_length=20)
+    phone_number = models.CharField("phone number", max_length=20)
 
     is_staff = models.BooleanField(
         "staff status",
         default=False,
         help_text="Designates whether the user can log into this admin site.",
     )
-    role = models.CharField(choices=USER_TYPE, max_length=10)
 
-    date_created = models.DateTimeField("date joined", default=timezone.now)
+    is_active = models.BooleanField(
+        "active",
+        default=True,
+        help_text=
+            "Designates whether this user should be treated as active. Unselect this instead of deleting accounts.")
+
+    role = models.CharField(choices=USER_TYPE, max_length=10, null=True)
+
+    date_created = models.DateTimeField("date created", default=timezone.now)
     # TODO: func - update updated
-    date_updated = models.DateTimeField("date joined", default=timezone.now)
+    date_updated = models.DateTimeField("date updated", default=timezone.now)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "phone_number"]
@@ -57,4 +86,4 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def clean(self):
         super().clean()
-        self.username = self.__class__.objects.normalize_email(self.username.lower())
+        self.email = self.__class__.objects.normalize_email(self.email.lower())
