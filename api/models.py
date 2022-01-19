@@ -19,7 +19,7 @@ class Client(models.Model):
     # TODO: func - check entered phone number
     phone_number = models.CharField("phone nomber", max_length=20)
     mobile_number = models.CharField("phone nomber", max_length=20)
-    company_name = models.CharField("last name", max_length=25)
+    company_name = models.CharField("company name", max_length=25)
 
     date_created = models.DateTimeField("date joined", default=timezone.now)
     date_updated = models.DateTimeField("date updated", default=timezone.now)
@@ -32,8 +32,17 @@ class Client(models.Model):
     # TODO: add sales_contact?
     REQUIRED_FIELDS = ["first_name", "last_name", "phone_number", "company_name", ]
 
+    @classmethod
+    def create(cls, email, first_name, last_name, phone_number, mobile_number,
+                company_name):
+        client = cls(email=email, first_name=first_name, last_name=last_name,
+                    phone_number=phone_number, mobile_number=mobile_number,
+                    company_name=company_name)
+
+        return client
+
     def __str__(self):
-        return f"{company_name}: {first_name} {last_name}"
+        return f"{self.company_name}: {self.first_name} {self.last_name}"
 
 
 class Contract(models.Model):
@@ -53,6 +62,13 @@ class Contract(models.Model):
         validators=[MinValueValidator(0.0),]
         )
     payment_due = models.DateField()
+
+    @classmethod
+    def create(cls, sales_contact, client, status, amount, payment_due):
+        contract = cls(sales_contact=sales_contact, client=client, status=status,
+                    amount=amount, payment_due=payment_due)
+
+        return contract
 
     def __str__(self):
         return self.id
@@ -74,6 +90,13 @@ class Event(models.Model):
         )
     event_date = models.DateField()
     notes = models.TextField(max_length=1000)
+
+    @classmethod
+    def create(cls, client, support_contact, status, attendees, event_date, notes):
+        event = cls(client=client, support_contact=support_contact, status=status,
+                        attendees=attendees, event_date=event_date, notes=notes)
+
+        return event
 
     def __str__(self):
         return self.id

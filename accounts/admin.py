@@ -14,11 +14,12 @@ class CustomUserAdmin(UserAdmin):
                 'is_staff', 'is_superuser',)
     list_display = ['email', 'first_name', 'last_name',
             'phone_number', 'role',
-            'is_staff', 'is_superuser',]
+            'is_staff', 'is_superuser', 'date_created', 'date_updated']
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('first_name', 'last_name',
-                                    'phone_number')}),
+                                    'phone_number', 'date_created',
+                                    'date_updated')}),
         ('Permissions', {'fields': ('is_superuser', 'is_staff', 'role')}),
     )
     add_fieldsets = (

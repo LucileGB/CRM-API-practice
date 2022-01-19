@@ -25,6 +25,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'rest_framework',
+    'django_filters',
     'accounts.apps.AccountsConfig',
     'api.apps.ApiConfig',
     'django.contrib.admin',
@@ -45,7 +46,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+}
+
 ROOT_URLCONF = 'main.urls'
+
 
 TEMPLATES = [
     {

@@ -5,6 +5,7 @@ from .models import Client, Contract, Event
 
 
 class ClientSerializer(serializers.ModelSerializer):
+    #sales_contact = serializers.HyperlinkedIdentityField(view_name='CustomUser')
     class Meta:
         model = Client
         fields = ['id', 'email', 'first_name', 'last_name', 'phone_number',
