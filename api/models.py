@@ -17,11 +17,11 @@ class Client(models.Model):
     first_name = models.CharField("first name", max_length=25)
     last_name = models.CharField("last name", max_length=25)
     # TODO: func - check entered phone number
-    phone_number = models.CharField("phone nomber", max_length=20)
-    mobile_number = models.CharField("phone nomber", max_length=20)
+    phone_number = models.CharField("phone number", max_length=20)
+    mobile_number = models.CharField("mobile number", max_length=20)
     company_name = models.CharField("company name", max_length=25)
 
-    date_created = models.DateTimeField("date joined", default=timezone.now)
+    date_created = models.DateTimeField("date created", default=timezone.now)
     date_updated = models.DateTimeField("date updated", default=timezone.now)
     sales_contact = models.ForeignKey(to=settings.AUTH_USER_MODEL,
                                         on_delete=models.SET_NULL,
@@ -54,9 +54,9 @@ class Contract(models.Model):
     client = models.ForeignKey(to=Client,
                             on_delete=models.SET_NULL,
                             blank=True, null=True)
-    date_created = models.DateTimeField("date joined", default=timezone.now)
+    date_created = models.DateTimeField("date created", default=timezone.now)
     # TODO: func - update updated
-    date_updated = models.DateTimeField("date joined", default=timezone.now)
+    date_updated = models.DateTimeField("date updated", default=timezone.now)
     status = models.BooleanField(default=True)
     amount = models.FloatField(
         validators=[MinValueValidator(0.0),]
@@ -77,9 +77,9 @@ class Event(models.Model):
     client = models.ForeignKey(to=Client,
                             on_delete=models.SET_NULL,
                             blank=True, null=True)
-    date_created = models.DateTimeField("date joined", default=timezone.now)
+    date_created = models.DateTimeField("date created", default=timezone.now)
     # TODO: func - update updated
-    date_updated = models.DateTimeField("date joined", default=timezone.now)
+    date_updated = models.DateTimeField("date updated", default=timezone.now)
     support_contact = models.ForeignKey(to=settings.AUTH_USER_MODEL,
                                         related_name="support_contact",
                                         on_delete=models.SET_NULL,

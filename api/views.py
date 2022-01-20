@@ -1,16 +1,21 @@
+import logging
+
+import django_filters.rest_framework
+
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from rest_framework import status
+from rest_framework import status, generics, filters
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.viewsets import ModelViewSet
 
 
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
-
+from .permissions import IsForbidden, IsSales, EventPermissions
 # Create your views here.
 
 
@@ -24,119 +29,87 @@ def api_root(request, format=None):
     })
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def clients(request):
-    if request.method == 'GET':
-        clients = Client.objects.all()
-        serializer = ClientSerializer(clients, many=True)
-        return Response(serializer.data)
+class ClientViewSet(ModelViewSet):
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        elif self.action == 'update' or self.action == 'create':
+            permission_classes = [IsSales]
+        else:
+            print("bleeeeh")
+            logging.info(f"Attempted unauthorized access: {self.action}")
 
-    elif request.method == 'POST':
-        serializer = ClientSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            permission_classes = [IsForbidden]
 
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['first_name', 'last_name']
-    search_fields = ['first_name', 'email']
+        return [permission() for permission in permission_classes]
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def client_details(request, pk):
-    try:
-        client = Client.objects.get(pk=pk)
-    except Client.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    filter_backends = [filters.SearchFilter,
+                    django_filters.rest_framework.DjangoFilterBackend,
+                    filters.OrderingFilter]
+    search_fields = ["company_name", "email", "first_name", "id", "last_name",
+                        "mobile_number", "phone_number"]
+    filterset_fields = ['date_created', 'date_updated', 'sales_contact']
+    ordering_fields = ['id', 'last_name', 'email', 'company_name',
+                        'date_created', 'date_updated', 'sales_contact']
 
-    if request.method == 'GET':
-        serializer = ClientSerializer(client)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        client = serializer.save(sales_contact=self.request.user)
 
-    elif request.method == 'PUT':
-        serializer = ClientSerializer(client, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ContractViewSet(ModelViewSet):
+    queryset = Contract.objects.all()
+    serializer_class = ContractSerializer
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        elif self.action == 'update' or self.action == 'create':
+            permission_classes = [IsSales]
+        else:
+            logging.info(f"Attempted unauthorized access: {self.action} in Contract")
+            permission_classes = [IsForbidden]
 
-    elif request.method == 'DELETE':
-        client.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return [permission() for permission in permission_classes]
 
+    filter_backends = [filters.SearchFilter,
+                    django_filters.rest_framework.DjangoFilterBackend,
+                    filters.OrderingFilter]
+    search_fields = ["sales_contact", "client", "status"]
+    filterset_fields = ['date_created', 'date_updated', 'sales_contact',
+                        "status",]
+    ordering_fields = ['id', 'amount', 'date_created', 'date_updated', 'sales_contact',
+                        "client", "payment_due"]
 
-@api_view(['GET', 'POST'])
-def contracts(request):
-    if request.method == 'GET':
-        contracts = Contract.objects.all()
-        serializer = ContractSerializer(contracts, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        serializer = ContractSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def contract_details(request, pk):
-    try:
-        contract = Contract.objects.get(pk=pk)
-    except Contract.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = ContractSerializer(contract)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = ContractSerializer(contract, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        contract.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def perform_create(self, serializer):
+        contract = serializer.save(sales_contact=self.request.user)
 
 
-@api_view(['GET', 'POST'])
-def events(request):
-    if request.method == 'GET':
-        events = Event.objects.all()
-        serializer = EventSerializer(events, many=True)
-        return Response(serializer.data)
+class EventViewSet(ModelViewSet):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        elif self.action == 'update' or self.action == 'create':
+            permission_classes = [EventPermissions]
+        else:
+            permission_classes = [IsForbidden]
 
-    elif request.method == 'POST':
-        serializer = EventSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def event_details(request, pk):
-    try:
-        event = Event.objects.get(pk=pk)
-    except Event.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = EventSerializer(event)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = EventSerializer(event, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        event.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return [permission() for permission in permission_classes]
+    filter_backends = [filters.SearchFilter,
+                    django_filters.rest_framework.DjangoFilterBackend,
+                    filters.OrderingFilter]
+    search_fields = ["support_contact", "client", "status"]
+    filterset_fields = ['date_created', 'date_updated', 'support_contact',
+                        "status", "notes"]
+    ordering_fields = ['id', 'date_created', 'date_updated', 'support_contact',
+                        "client", "attendees", "event_date"]

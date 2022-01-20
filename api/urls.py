@@ -1,14 +1,16 @@
-from django.urls import path
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 from api import views
 
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'clients', views.ClientViewSet, basename='clients')
+router.register(r'contracts', views.ContractViewSet, basename='contracts')
+router.register(r'events', views.EventViewSet, basename='events')
+
 urlpatterns = [
     path('', views.api_root, name='api_root'),
-    path('clients/', views.clients, name='clients'),
-    path('clients/<int:pk>', views.client_details),
-    path('contracts/', views.contracts, name='contracts'),
-    path('contracts/<int:pk>', views.contract_details),
-    path('events/', views.events, name='events'),
-    path('events/<int:pk>', views.event_details),
+    path('', include(router.urls)),
 ]
