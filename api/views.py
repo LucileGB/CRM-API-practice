@@ -16,7 +16,10 @@ from rest_framework.viewsets import ModelViewSet
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
 from .permissions import IsForbidden, IsSales, EventPermissions
-# Create your views here.
+
+
+logger = logging.getLogger(__name__)
+logger.warning("IT LIVES")
 
 
 @api_view(['GET'])
@@ -41,9 +44,6 @@ class ClientViewSet(ModelViewSet):
         elif self.action == 'update' or self.action == 'create':
             permission_classes = [IsSales]
         else:
-            print("bleeeeh")
-            logging.info(f"Attempted unauthorized access: {self.action}")
-
             permission_classes = [IsForbidden]
 
         return [permission() for permission in permission_classes]

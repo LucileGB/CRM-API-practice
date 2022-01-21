@@ -1,9 +1,10 @@
 """
-Django settings for main project.
-
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+
+import logging
+import os
 
 from pathlib import Path
 
@@ -124,10 +125,48 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# configure logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'Simple_Format': {
+            'format': '[{asctime}] {levelname}: {message}',
+            'style': '{',
+        }
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': './logs/log_file.log',
+            'formatter': 'Simple_Format'
+        },
+        'console': {
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',
+            'formatter': 'Simple_Format'
+        },
+
+    },
+
+    'root': {
+        'level': 'WARNING',
+        'handlers': ['console', 'file'],
+        },
+
+    'loggers': {
+        'rest_api': {
+            'handlers': ['file', 'console'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    }
+}
 
 # Login logic
 LOGIN_URL = '/login'
 
-LOGIN_REDIRECT_URL = '/clients'
+LOGIN_REDIRECT_URL = '/'
 
 LOGOUT_REDIRECT_URL = '/login'
