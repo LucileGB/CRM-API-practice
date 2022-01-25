@@ -73,9 +73,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     role = models.CharField(choices=USER_TYPE, max_length=10, null=True)
 
-    date_created = models.DateTimeField("date created", default=timezone.now)
+    date_created = models.DateField("date created", default=timezone.localdate)
     # TODO: func - update updated
-    date_updated = models.DateTimeField("date updated", default=timezone.now)
+    date_updated = models.DateField("date updated", default=timezone.localdate)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "phone_number"]

@@ -1,17 +1,19 @@
 import logging
+import datetime
 
 import django_filters.rest_framework
 
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
 from rest_framework import status, generics, filters
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
-
 
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
@@ -19,7 +21,6 @@ from .permissions import IsForbidden, IsSales, EventPermissions
 
 
 logger = logging.getLogger(__name__)
-logger.warning("IT LIVES")
 
 
 @api_view(['GET'])
@@ -72,7 +73,6 @@ class ContractViewSet(ModelViewSet):
         elif self.action == 'update' or self.action == 'create':
             permission_classes = [IsSales]
         else:
-            logging.info(f"Attempted unauthorized access: {self.action} in Contract")
             permission_classes = [IsForbidden]
 
         return [permission() for permission in permission_classes]
@@ -87,7 +87,12 @@ class ContractViewSet(ModelViewSet):
                         "client", "payment_due"]
 
     def perform_create(self, serializer):
-        contract = serializer.save(sales_contact=self.request.user)
+        client = Client.objects.get(id=serializer.validated_data['client'].id)
+        if client.sales_contact.id != self.request.user.id:
+            logger.warning("Attempt to create a contract for a client with another sale support.")
+            raise PermissionDenied({"message":"You can only create contracts for your own clients."})
+        else:
+            contract = serializer.save(sales_contact=self.request.user)
 
 
 class EventViewSet(ModelViewSet):
@@ -113,3 +118,12 @@ class EventViewSet(ModelViewSet):
                         "status", "notes"]
     ordering_fields = ['id', 'date_created', 'date_updated', 'support_contact',
                         "client", "attendees", "event_date"]
+
+    def perform_create(self, serializer):
+        client = Client.objects.get(id=serializer.validated_data['client'].id)
+        if client.sales_contact.id != self.request.user.id:
+            logger.warning("Attempt to create an event for a client with another sale support.")
+            raise PermissionDenied({"message":"You can only create contracts for your own clients."})
+
+        else:
+            event = serializer.save()

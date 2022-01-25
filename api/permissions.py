@@ -1,4 +1,8 @@
+import logging
+
 from rest_framework import permissions
+
+logger = logging.getLogger(__name__)
 
 
 class IsForbidden(permissions.BasePermission):
@@ -15,24 +19,31 @@ class IsSales(permissions.BasePermission):
             if request.method in permissions.SAFE_METHODS or request.user.is_staff:
                 return True
 
-            elif request.user.role == "sa" and request.method == "POST":
+            elif request.user.role == "sa" and request.method != "DELETE":
                 return True
 
             else:
                 return False
 
         except Exception as e:
+            logger.warning(e)
             return False
 
     def has_object_permission(self, request, view, obj):
         try:
             if request.method in permissions.SAFE_METHODS or request.user.is_staff:
                 return True
-            elif request.user.role == "sa"  and request.method == "PUT":
+
+            elif request.user.role == "sa" and request.method == "POST":
+                return True
+
+            elif obj.sales_contact.id == request.user.id and request.method != "DELETE":
                 return True
 
             return False
+
         except Exception as e:
+            logger.warning(e)
             return False
 
 class EventPermissions(permissions.BasePermission):
@@ -41,15 +52,13 @@ class EventPermissions(permissions.BasePermission):
             if request.method in permissions.SAFE_METHODS or request.user.is_staff:
                 return True
 
-            elif request.user.role == "sa" and request.method == "POST":
-                return True
-
-            elif request.user.role in ["su", "sa"] and request.method == "PUT":
+            elif request.user.role in ["sa", "su"] and request.method != "DELETE":
                 return True
 
             return False
 
         except Exception as e:
+            logger.warning(e)
             return False
 
     def has_object_permission(self, request, view, obj):
@@ -57,10 +66,14 @@ class EventPermissions(permissions.BasePermission):
             if request.method in permissions.SAFE_METHODS or request.user.is_staff:
                 return True
 
-            elif request.user.role in ["su", "sa"] and request.method == "PUT":
+            elif obj.support_contact.id == request.user.id and request.method != "DELETE":
+                return True
+
+            elif obj.client.sales_contact.id == request.user.id and request.method != "DELETE":
                 return True
 
             return False
 
         except Exception as e:
+            logger.warning(e)
             return False
