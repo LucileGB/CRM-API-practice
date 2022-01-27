@@ -13,7 +13,7 @@ class IsForbidden(permissions.BasePermission):
         return False
 
 
-class IsSales(permissions.BasePermission):
+class SalesPermissions(permissions.BasePermission):
     def has_permission(self, request, view):
         try:
             if request.method in permissions.SAFE_METHODS or request.user.is_staff:
@@ -45,6 +45,7 @@ class IsSales(permissions.BasePermission):
         except Exception as e:
             logger.warning(e)
             return False
+
 
 class EventPermissions(permissions.BasePermission):
     def has_permission(self, request, view):

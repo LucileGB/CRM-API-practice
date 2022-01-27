@@ -1,14 +1,9 @@
 import logging
-import datetime
 
 import django_filters.rest_framework
 
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-from django.utils import timezone
-from rest_framework import status, generics, filters
-from rest_framework.parsers import JSONParser
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import filters
+from rest_framework.decorators import permission_classes
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.permissions import IsAuthenticated
@@ -17,25 +12,16 @@ from rest_framework.viewsets import ModelViewSet
 
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
-from .permissions import IsForbidden, IsSales, EventPermissions
+from .permissions import IsForbidden, SalesPermissions, EventPermissions
 
 
 logger = logging.getLogger(__name__)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def api_root(request, format=None):
-    return Response({
-        'clients': reverse('clients', request=request, format=format),
-        'contracts': reverse('contracts', request=request, format=format),
-        'events': reverse('events', request=request, format=format),
-    })
-
-
 class ClientViewSet(ModelViewSet):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
+
     def get_permissions(self):
         """
         Instantiates and returns the list of permissions that this view requires.
@@ -43,7 +29,7 @@ class ClientViewSet(ModelViewSet):
         if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         elif self.action == 'update' or self.action == 'create':
-            permission_classes = [IsSales]
+            permission_classes = [SalesPermissions]
         else:
             permission_classes = [IsForbidden]
 
@@ -71,7 +57,7 @@ class ContractViewSet(ModelViewSet):
         if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         elif self.action == 'update' or self.action == 'create':
-            permission_classes = [IsSales]
+            permission_classes = [SalesPermissions]
         else:
             permission_classes = [IsForbidden]
 
@@ -82,7 +68,7 @@ class ContractViewSet(ModelViewSet):
                     filters.OrderingFilter]
     search_fields = ["sales_contact", "client", "status"]
     filterset_fields = ['date_created', 'date_updated', 'sales_contact',
-                        "status",]
+                        "status"]
     ordering_fields = ['id', 'amount', 'date_created', 'date_updated', 'sales_contact',
                         "client", "payment_due"]
 
@@ -90,7 +76,7 @@ class ContractViewSet(ModelViewSet):
         client = Client.objects.get(id=serializer.validated_data['client'].id)
         if client.sales_contact.id != self.request.user.id:
             logger.warning("Attempt to create a contract for a client with another sale support.")
-            raise PermissionDenied({"message":"You can only create contracts for your own clients."})
+            raise PermissionDenied({"message": "You can only create contracts for your own clients."})
         else:
             contract = serializer.save(sales_contact=self.request.user)
 
@@ -123,7 +109,7 @@ class EventViewSet(ModelViewSet):
         client = Client.objects.get(id=serializer.validated_data['client'].id)
         if client.sales_contact.id != self.request.user.id:
             logger.warning("Attempt to create an event for a client with another sale support.")
-            raise PermissionDenied({"message":"You can only create contracts for your own clients."})
+            raise PermissionDenied({"message": "You don't have permission to create this event."})
 
         else:
             event = serializer.save()

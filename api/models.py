@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.postgres.fields import CIEmailField
 from django.core.validators import MinValueValidator
 
+
 class Client(models.Model):
     email = CIEmailField(
         "email address",
@@ -16,11 +17,9 @@ class Client(models.Model):
     )
     first_name = models.CharField("first name", max_length=25)
     last_name = models.CharField("last name", max_length=25)
-    # TODO: func - check entered phone number
     phone_number = models.CharField("phone number", max_length=20)
     mobile_number = models.CharField("mobile number", max_length=20)
     company_name = models.CharField("company name", max_length=25)
-
     date_created = models.DateField("date created", default=timezone.localdate)
     date_updated = models.DateField("date updated", default=timezone.localdate)
     sales_contact = models.ForeignKey(to=settings.AUTH_USER_MODEL,
@@ -29,7 +28,7 @@ class Client(models.Model):
 
     USERNAME_FIELD = "email"
 
-    REQUIRED_FIELDS = ["first_name", "last_name", "phone_number", "company_name", ]
+    REQUIRED_FIELDS = ["first_name", "last_name", "phone_number", "company_name"]
 
     @classmethod
     def create(cls, email, first_name, last_name, phone_number, mobile_number,
@@ -56,7 +55,7 @@ class Contract(models.Model):
     date_updated = models.DateField("date updated", default=timezone.localdate)
     status = models.BooleanField(default=True)
     amount = models.FloatField(
-        validators=[MinValueValidator(0.0),]
+        validators=[MinValueValidator(0.0)]
         )
     payment_due = models.DateField()
 
@@ -66,6 +65,7 @@ class Contract(models.Model):
                     amount=amount, payment_due=payment_due)
 
         return contract
+
 
 class Event(models.Model):
     client = models.ForeignKey(to=Client,
@@ -79,7 +79,7 @@ class Event(models.Model):
                                         blank=True, null=True)
     status = models.BooleanField(default=True)
     attendees = models.PositiveBigIntegerField(
-        validators=[MinValueValidator(0),]
+        validators=[MinValueValidator(0)]
         )
     event_date = models.DateField()
     notes = models.TextField(max_length=1000, blank=True, null=True)

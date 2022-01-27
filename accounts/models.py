@@ -1,15 +1,14 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin, UserManager
-from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 from django.contrib.postgres.fields import CIEmailField
+
 
 class CustomUserManager(UserManager):
     def get_by_natural_key(self, username):
         case_insensitive_username_field = '{}__iexact'.format(self.model.USERNAME_FIELD)
         return self.get(**{case_insensitive_username_field: username})
-
 
     def create_user(self, email, password, is_staff, is_superuser, **extra_fields):
         if not email:
@@ -29,9 +28,11 @@ class CustomUserManager(UserManager):
 
     def create_superuser(self, email, password=None, is_staff=True,
                         is_superuser=True, **extra_fields):
-        user=self.create_user(email, password, is_staff, is_superuser, **extra_fields)
+        user = self.create_user(email, password, is_staff,
+                            is_superuser, **extra_fields)
         user.save(using=self._db)
         return user
+
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
@@ -56,13 +57,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     first_name = models.CharField("first name", max_length=25)
     last_name = models.CharField("last name", max_length=25)
-    # TODO: func - check entered phone number
     phone_number = models.CharField("phone number", max_length=20)
 
     is_staff = models.BooleanField(
         "staff status",
-        default=False,
-        help_text="Designates whether the user can log into this admin site.",
+        default = False,
+        help_text = "Designates whether the user can log into this admin site.",
     )
 
     is_active = models.BooleanField(
@@ -74,7 +74,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(choices=USER_TYPE, max_length=10, null=True)
 
     date_created = models.DateField("date created", default=timezone.localdate)
-    # TODO: func - update updated
     date_updated = models.DateField("date updated", default=timezone.localdate)
 
     USERNAME_FIELD = "email"
