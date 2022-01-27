@@ -53,7 +53,7 @@ class Contract(models.Model):
                             blank=True, null=True)
     date_created = models.DateField("date created", default=timezone.localdate)
     date_updated = models.DateField("date updated", default=timezone.localdate)
-    status = models.BooleanField(default=True)
+    status = models.BooleanField(default=False)
     amount = models.FloatField(
         validators=[MinValueValidator(0.0)]
         )

@@ -67,6 +67,9 @@ class EventPermissions(permissions.BasePermission):
             if request.method in permissions.SAFE_METHODS or request.user.is_staff:
                 return True
 
+            elif obj.status == False:
+                return False
+                
             elif obj.support_contact.id == request.user.id and request.method != "DELETE":
                 return True
 
