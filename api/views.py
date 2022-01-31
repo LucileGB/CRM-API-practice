@@ -39,7 +39,7 @@ class ClientViewSet(ModelViewSet):
                     django_filters.rest_framework.DjangoFilterBackend,
                     filters.OrderingFilter]
     search_fields = ["company_name", "email", "first_name", "id", "last_name",
-                        "mobile_number", "phone_number"]
+                        "mobile_number", "phone_number", "sales_contact"]
     filterset_fields = ['date_created', 'date_updated', 'sales_contact']
     ordering_fields = ['id', 'last_name', 'email', 'company_name',
                         'date_created', 'date_updated', 'sales_contact']
@@ -66,11 +66,11 @@ class ContractViewSet(ModelViewSet):
     filter_backends = [filters.SearchFilter,
                     django_filters.rest_framework.DjangoFilterBackend,
                     filters.OrderingFilter]
-    search_fields = ["sales_contact", "client", "status"]
+    search_fields = ["sales_contact", "client", "client__email", "status"]
     filterset_fields = ['date_created', 'date_updated', 'sales_contact',
-                        "status"]
-    ordering_fields = ['id', 'amount', 'date_created', 'date_updated', 'sales_contact',
-                        "client", "payment_due"]
+                        'payment_due', "status", "client", "client__email"]
+    ordering_fields = ['id', 'amount', 'date_created', 'date_updated',
+                        'sales_contact', "client", "client_email", "payment_due"]
 
     def perform_create(self, serializer):
         client = Client.objects.get(id=serializer.validated_data['client'].id)
@@ -99,11 +99,14 @@ class EventViewSet(ModelViewSet):
     filter_backends = [filters.SearchFilter,
                     django_filters.rest_framework.DjangoFilterBackend,
                     filters.OrderingFilter]
-    search_fields = ["support_contact", "client", "status"]
+    search_fields = ["support_contact", "client", "status", "event_date",
+                    "client__email", "client__sales_contact__id"]
     filterset_fields = ['date_created', 'date_updated', 'support_contact',
-                        "status", "notes"]
+                        "status", "event_date", "notes", "client__email",
+                        "client__sales_contact__id"]
     ordering_fields = ['id', 'date_created', 'date_updated', 'support_contact',
-                        "client", "attendees", "event_date"]
+                        "client", "attendees", "event_date", "client__email",
+                        "client__sales_contact__id"]
 
     def perform_create(self, serializer):
         client = Client.objects.get(id=serializer.validated_data['client'].id)
